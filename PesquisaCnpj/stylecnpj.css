@@ -16,12 +16,14 @@ body {
     top: 0;
     z-index: 1000;
     padding: 0px 24px;
-    height: 68.49px;
+    height: 74.49px;
     background-color: #c73035;
 }
 
 #Logo {
-    width: 250px;
+    width: 245px;
+    border: 3px solid black;
+    border-radius: 20px;
 }
 
 .navMenu {

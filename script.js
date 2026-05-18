@@ -1,23 +1,3 @@
-const bColar = document.getElementById("bColar");
-
-bColar.onclick = async () => {
-
-    try {
-        const texto = await navigator.clipboard.readText();
-
-        echave.value = texto.replace(/[^0-9]/g, '');
-
-        echave.dispatchEvent(new Event("input"));
-
-
-    } catch (erro) {
-        alert("Não foi possível colar o conteúdo");
-    }
-}
-
-
-
-
 const universalLink = "https://www.nfe.fazenda.gov.br/portal/consultaRecaptcha.aspx?tipoConsulta=resumo&tipoConteudo=7PhJ%20gAVw2g=";
 const universalLink2 = "https://meudanfe.com.br/#"
 
@@ -126,176 +106,357 @@ const estadoNomes = {
     "52": "Goiás",
     "53": "Distrito Federal"
 };
+// ======================================================
+// ELEMENTOS DOM
+// ======================================================
+
+const echave = document.getElementById("chave");
+
+const bColar = document.getElementById("bColar");
+const bColarImagem = document.getElementById("bColarImagem");
+
+const inputImagem = document.getElementById("inputImagem");
+const statusOcr = document.getElementById("statusOcr");
+const dropZone = document.getElementById("dropZone");
 
 
-// --- FUNÇÃO CENTRAL DE LEITURA DE IMAGEM ---
-// --- PRÉ-PROCESSAMENTO ---
+// ======================================================
+// PRÉ-PROCESSAMENTO
+// ======================================================
+
 async function preprocessarImagem(arquivo, graus = 0) {
+
     return new Promise((resolve, reject) => {
+
         const img = new Image();
         const url = URL.createObjectURL(arquivo);
 
-        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Erro ao carregar imagem.")); };
+        img.onerror = () => {
+            URL.revokeObjectURL(url);
+            reject(new Error("Erro ao carregar imagem."));
+        };
 
         img.onload = () => {
+
             try {
+
                 const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+
                 const rad = graus * Math.PI / 180;
 
-                // Troca largura/altura se rotação for 90 ou 270
-                if (graus === 90 || graus === 270) {
-                    canvas.width = img.height * 2;
-                    canvas.height = img.width * 2;
-                } else {
-                    canvas.width = img.width * 2;
-                    canvas.height = img.height * 2;
+                // Limite máximo para evitar travamentos
+                const MAX = 1800;
+                const SCALE = 1.5;
+
+                let largura = img.width;
+                let altura = img.height;
+
+                if (largura > MAX || altura > MAX) {
+
+                    const ratio = Math.min(MAX / largura, MAX / altura);
+
+                    largura *= ratio;
+                    altura *= ratio;
                 }
 
-                const ctx = canvas.getContext('2d');
+                if (graus === 90 || graus === 270) {
+
+                    canvas.width = altura * SCALE;
+                    canvas.height = largura * SCALE;
+
+                } else {
+
+                    canvas.width = largura * SCALE;
+                    canvas.height = altura * SCALE;
+                }
+
                 ctx.translate(canvas.width / 2, canvas.height / 2);
+
                 ctx.rotate(rad);
-                ctx.drawImage(img, -img.width, -img.height, img.width * 2, img.height * 2);
+
+                ctx.drawImage(
+                    img,
+                    -largura / 2,
+                    -altura / 2,
+                    largura,
+                    altura
+                );
+
                 ctx.setTransform(1, 0, 0, 1, 0, 0);
 
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                // grayscale
+                const imageData = ctx.getImageData(
+                    0,
+                    0,
+                    canvas.width,
+                    canvas.height
+                );
+
                 const data = imageData.data;
+
                 for (let i = 0; i < data.length; i += 4) {
-                    const gray = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
-                    data[i] = data[i+1] = data[i+2] = gray;
+
+                    const gray =
+                        0.299 * data[i] +
+                        0.587 * data[i + 1] +
+                        0.114 * data[i + 2];
+
+                    data[i] = gray;
+                    data[i + 1] = gray;
+                    data[i + 2] = gray;
                 }
+
                 ctx.putImageData(imageData, 0, 0);
+
                 URL.revokeObjectURL(url);
+
                 canvas.toBlob((blob) => {
-                    if (blob) resolve(blob);
-                    else reject(new Error("Falha ao converter canvas."));
+
+                    if (blob) {
+                        resolve(blob);
+                    } else {
+                        reject(new Error("Falha ao converter imagem."));
+                    }
+
                 }, 'image/png');
-            } catch (e) { URL.revokeObjectURL(url); reject(e); }
+
+            } catch (e) {
+
+                URL.revokeObjectURL(url);
+
+                reject(e);
+            }
         };
 
         img.src = url;
     });
 }
 
-// --- ENCONTRAR CHAVE ---
+
+// ======================================================
+// ENCONTRAR CHAVE
+// ======================================================
+
 function encontrarChave(str) {
+
     const ufsValidas = Object.keys(estadoNomes);
+
     const tiposValidos = ["55", "59", "65"];
 
     for (let i = 0; i <= str.length - 44; i++) {
+
         const c = str.slice(i, i + 44);
-        const uf  = c.slice(0, 2);
+
+        const uf = c.slice(0, 2);
         const ano = Number(c.slice(2, 4));
         const mes = Number(c.slice(4, 6));
-        const yy  = c.slice(20, 22);
+        const yy = c.slice(20, 22);
 
         if (
+
             ufsValidas.includes(uf) &&
-            ano >= 6 && ano <= 30 &&
-            mes >= 1 && mes <= 12 &&
+            ano >= 6 &&
+            ano <= 30 &&
+            mes >= 1 &&
+            mes <= 12 &&
             tiposValidos.includes(yy)
+
         ) {
+
             return c;
         }
     }
+
     return null;
 }
 
-// --- LER NOTA ---
+
+// ======================================================
+// OCR
+// ======================================================
+
 async function lerNota(arquivo) {
+
     if (!arquivo) return;
-    statusOcr.textContent = "⏳ Lendo imagem... aguarde.";
+
+    statusOcr.textContent = "⏳ Lendo imagem...";
     statusOcr.style.color = "blue";
 
     try {
+
         const rotacoes = [0, 90, 180, 270];
 
         for (const graus of rotacoes) {
-            if (graus > 0) statusOcr.textContent = `⏳ Tentando rotação ${graus}°...`;
 
-            const imagemProcessada = await preprocessarImagem(arquivo, graus);
-            const result = await Tesseract.recognize(imagemProcessada, 'por+eng', {
-                tessedit_pageseg_mode: '6'
-            });
+            if (graus > 0) {
 
-            const chave = encontrarChave(result.data.text.replace(/[^0-9]/g, ''));
+                statusOcr.textContent =
+                    `⏳ Tentando rotação ${graus}°...`;
+            }
+
+            const imagemProcessada =
+                await preprocessarImagem(arquivo, graus);
+
+            const result = await Tesseract.recognize(
+
+                imagemProcessada,
+
+                'por+eng',
+
+                {
+                    tessedit_pageseg_mode: '11'
+                }
+            );
+
+            const textoLimpo =
+                result.data.text.replace(/[^0-9]/g, '');
+
+            const chave = encontrarChave(textoLimpo);
 
             if (chave) {
+
                 echave.value = chave;
-                statusOcr.textContent = graus > 0
-                    ? `✅ Chave identificada! (imagem estava ${graus}° rotacionada)`
-                    : "✅ Chave identificada!";
+
+                statusOcr.textContent =
+                    graus > 0
+                        ? `✅ Chave encontrada (${graus}°)`
+                        : "✅ Chave encontrada";
+
                 statusOcr.style.color = "green";
+
                 verificar();
+
                 return;
             }
         }
 
-        statusOcr.innerHTML = `❌ Não consegui ler a chave automaticamente.<br>
-        <small style="color:#888">Digite ou cole a chave manualmente no campo acima.</small>`;
+        statusOcr.innerHTML = `
+            ❌ Não consegui identificar a chave.<br>
+            <small>
+                Digite ou cole manualmente.
+            </small>
+        `;
+
         statusOcr.style.color = "red";
 
     } catch (erro) {
-        console.error("Erro detalhado:", erro.message, erro);
-        statusOcr.textContent = "⚠️ Erro ao processar imagem.";
+
+        console.error(erro);
+
+        statusOcr.textContent =
+            "⚠️ Erro ao processar imagem.";
+
         statusOcr.style.color = "orange";
     }
 }
 
 
-// --- ARRASTAR E SOLTAR ---
+// ======================================================
+// DRAG AND DROP
+// ======================================================
+
 ['dragover', 'dragleave', 'drop'].forEach(eventName => {
+
     dropZone.addEventListener(eventName, (e) => {
+
         e.preventDefault();
         e.stopPropagation();
     });
 });
 
-dropZone.addEventListener('dragover', () => dropZone.classList.add('dragover'));
-dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('dragover', () => {
+
+    dropZone.classList.add('dragover');
+});
+
+dropZone.addEventListener('dragleave', () => {
+
+    dropZone.classList.remove('dragover');
+});
 
 dropZone.addEventListener('drop', (e) => {
+
     dropZone.classList.remove('dragover');
+
     const arquivo = e.dataTransfer.files[0];
+
     lerNota(arquivo);
 });
 
-// --- BOTÃO COLAR IMAGEM ---
+
+// ======================================================
+// COLAR IMAGEM
+// ======================================================
+
 bColarImagem.onclick = async () => {
+
     try {
+
         const itens = await navigator.clipboard.read();
+
         for (const item of itens) {
-            if (item.types.some(type => type.startsWith('image/'))) {
-                const blob = await item.getType(item.types.find(t => t.startsWith('image/')));
+
+            if (
+                item.types.some(type =>
+                    type.startsWith('image/')
+                )
+            ) {
+
+                const blob = await item.getType(
+
+                    item.types.find(t =>
+                        t.startsWith('image/')
+                    )
+                );
+
                 lerNota(blob);
+
                 return;
             }
         }
-        alert("Nenhuma imagem encontrada na área de transferência.");
+
+        alert("Nenhuma imagem encontrada.");
+
     } catch (err) {
-        alert("Erro ao acessar clipboard. Tente Ctrl+V.");
+
+        alert("Erro ao acessar clipboard.");
     }
 };
 
-// --- CLIQUE NO INPUT DE ARQUIVO ---
-inputImagem.addEventListener("change", (e) => lerNota(e.target.files[0]));
 
-// --- COLAR TEXTO ---
-bColar.onclick = async () => {
-    try {
-        const texto = await navigator.clipboard.readText();
-        echave.value = texto.replace(/[^0-9]/g, '');
-        verificar();
-    } catch (erro) {
-        alert("Não foi possível colar o conteúdo");
-    }
-}
+// ======================================================
+// INPUT FILE
+// ======================================================
 
-const echave = document.getElementById("chave");
+inputImagem.addEventListener("change", (e) => {
 
-echave.addEventListener("input", () => {
-
-    verificar();
+    lerNota(e.target.files[0]);
 });
+
+
+// ======================================================
+// COLAR TEXTO
+// ======================================================
+
+bColar.onclick = async () => {
+
+    try {
+
+        const texto =
+            await navigator.clipboard.readText();
+
+        echave.value =
+            texto.replace(/[^0-9]/g, '');
+
+        verificar();
+
+    } catch (erro) {
+
+        alert("Não foi possível colar.");
+    }
+};
+
 
 
 

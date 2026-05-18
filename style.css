@@ -180,22 +180,63 @@ body {
 .rodape a {
     text-decoration: none;
 }
-
-
-
-
-
+/* DROP ZONE */
+.drop-zone {
+    margin-top: 8px;
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    background: #fdfdfd;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+}
+.drop-zone-row {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+}
+.drop-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    cursor: pointer;
+    width: 45vw;
+    border: 1px solid #ccc;
+    padding-left: 10px;
+    box-sizing: border-box;
+    background: white;
+}
+.btn-colar-img {
+    font-size: 1.5rem;
+    padding-left: 10px;
+    padding-right: 10px;
+    white-space: nowrap;
+}
+.drop-zone.dragover {
+    border-color: #2196F3;
+    background-color: #e3f2fd;
+    transform: scale(1.02);
+}
+.status-texto {
+    margin-top: 8px;
+    font-weight: bold;
+    font-size: 1rem;
+    text-align: center;
+}
 
 #mensagem[style*="block"] {
-
     width: auto;
     position: fixed;
-    top: 10%;
+    top: 0%;
     left: 50%;
     transform: translate(-50%);
-    animation:
-        descerMensagem 1s ease;
-
+    animation: descerMensagem 1s ease;
 }
 
 @keyframes descerMensagem {

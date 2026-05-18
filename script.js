@@ -1,7 +1,5 @@
-const universalLink = "https://www.nfe.fazenda.gov.br/portal/consultaRecaptcha.aspx?tipoConsulta=resumo&tipoConteudo=7PhJ%20gAVw2g=";
-const universalLink2 = "https://meudanfe.com.br/#"
-
-
+// ======================================================
+// MANTENHA SEUS DICIONÁRIOS AQUI (satLinks, nfceLinks, etc)
 const satLinks = {
     "11": "https://sistemas.sefaz.ro.gov.br/",
     "12": "https://www.sefaz.ac.gov.br/sat/",
@@ -9,7 +7,7 @@ const satLinks = {
     "14": "https://www.sefaz.rr.gov.br/nfc-e",
     "15": "https://app.sefa.pa.gov.br/consulta-nfce/#/consulta",
     "16": "https://www.sefaz.ap.gov.br/sate/seg/SEGf_AcessarFuncao.jsp?cdFuncao=FIS_1261",
-    "17": "https://www.sefaz.to.gov.br/nfce", // link atualizado 14/05 "http://www.sefaz.to.gov.br/nfce/consulta.jsf",
+    "17": "http://www.sefaz.to.gov.br/nfce/consulta.jsf",
     "21": "http://www.nfce.sefaz.ma.gov.br/portal/consultarnfce.jsp",
     "22": "https://www.sefaz.pi.gov.br/nfce/qrcode",
     "23": "https://cfe.sefaz.ce.gov.br/mfe/servicos#/cupom-fiscal",
@@ -39,7 +37,7 @@ const nfceLinks = {
     "14": "https://www.sefaz.rr.gov.br/nfce/servlet/wp_consulta_nfce",
     "15": "https://app.sefa.pa.gov.br/consulta-nfce/#/consulta",
     "16": "https://www.sefaz.ap.gov.br/sate/seg/SEGf_AcessarFuncao.jsp?cdFuncao=FIS_1261",
-    "17": "https://www.sefaz.to.gov.br/nfce", // link atualizado 14/05 "http://www.sefaz.to.gov.br/nfce/consulta.jsf",
+    "17": "http://www.sefaz.to.gov.br/nfce/consulta.jsf",
     "21": "http://www.nfce.sefaz.ma.gov.br/portal/consultarnfce.jsp",
     "22": "https://www.sefaz.pi.gov.br/nfce/qrcode",
     "23": "http://nfce.sefaz.ce.gov.br/pages/consultaNota.jsf",
@@ -106,381 +104,199 @@ const estadoNomes = {
     "52": "Goiás",
     "53": "Distrito Federal"
 };
-// ======================================================
-// ELEMENTOS DOM
-// ======================================================
 
-const echave = document.getElementById("chave");
+// ========================================================
+
+// --- VARIÁREIS DE INTERFACE (Declarar apenas uma vez) ---
+// ========================================================
 
 const bColar = document.getElementById("bColar");
 const bColarImagem = document.getElementById("bColarImagem");
-
+const echave = document.getElementById("chave");
 const inputImagem = document.getElementById("inputImagem");
 const statusOcr = document.getElementById("statusOcr");
 const dropZone = document.getElementById("dropZone");
 
+const universalLink = "https://www.nfe.fazenda.gov.br/portal/consultaRecaptcha.aspx?tipoConsulta=resumo&tipoConteudo=7PhJ%20gAVw2g=";
+const universalLink2 = "https://meudanfe.com.br/#";
 
-// ======================================================
-// PRÉ-PROCESSAMENTO
-// ======================================================
-
+// --- FUNÇÃO CENTRAL DE LEITURA DE IMAGEM ---
+// --- PRÉ-PROCESSAMENTO ---
 async function preprocessarImagem(arquivo, graus = 0) {
-
     return new Promise((resolve, reject) => {
-
         const img = new Image();
         const url = URL.createObjectURL(arquivo);
 
-        img.onerror = () => {
-            URL.revokeObjectURL(url);
-            reject(new Error("Erro ao carregar imagem."));
-        };
+        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Erro ao carregar imagem.")); };
 
         img.onload = () => {
-
             try {
-
                 const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-
                 const rad = graus * Math.PI / 180;
 
-                // Limite máximo para evitar travamentos
-                const MAX = 1800;
-                const SCALE = 1.5;
-
-                let largura = img.width;
-                let altura = img.height;
-
-                if (largura > MAX || altura > MAX) {
-
-                    const ratio = Math.min(MAX / largura, MAX / altura);
-
-                    largura *= ratio;
-                    altura *= ratio;
-                }
-
+                // Troca largura/altura se rotação for 90 ou 270
                 if (graus === 90 || graus === 270) {
-
-                    canvas.width = altura * SCALE;
-                    canvas.height = largura * SCALE;
-
+                    canvas.width = img.height * 2;
+                    canvas.height = img.width * 2;
                 } else {
-
-                    canvas.width = largura * SCALE;
-                    canvas.height = altura * SCALE;
+                    canvas.width = img.width * 2;
+                    canvas.height = img.height * 2;
                 }
 
+                const ctx = canvas.getContext('2d');
                 ctx.translate(canvas.width / 2, canvas.height / 2);
-
                 ctx.rotate(rad);
-
-                ctx.drawImage(
-                    img,
-                    -largura / 2,
-                    -altura / 2,
-                    largura,
-                    altura
-                );
-
+                ctx.drawImage(img, -img.width, -img.height, img.width * 2, img.height * 2);
                 ctx.setTransform(1, 0, 0, 1, 0, 0);
 
-                // grayscale
-                const imageData = ctx.getImageData(
-                    0,
-                    0,
-                    canvas.width,
-                    canvas.height
-                );
-
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 const data = imageData.data;
-
                 for (let i = 0; i < data.length; i += 4) {
-
-                    const gray =
-                        0.299 * data[i] +
-                        0.587 * data[i + 1] +
-                        0.114 * data[i + 2];
-
-                    data[i] = gray;
-                    data[i + 1] = gray;
-                    data[i + 2] = gray;
+                    const gray = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
+                    data[i] = data[i+1] = data[i+2] = gray;
                 }
-
                 ctx.putImageData(imageData, 0, 0);
-
                 URL.revokeObjectURL(url);
-
                 canvas.toBlob((blob) => {
-
-                    if (blob) {
-                        resolve(blob);
-                    } else {
-                        reject(new Error("Falha ao converter imagem."));
-                    }
-
+                    if (blob) resolve(blob);
+                    else reject(new Error("Falha ao converter canvas."));
                 }, 'image/png');
-
-            } catch (e) {
-
-                URL.revokeObjectURL(url);
-
-                reject(e);
-            }
+            } catch (e) { URL.revokeObjectURL(url); reject(e); }
         };
 
         img.src = url;
     });
 }
 
-
-// ======================================================
-// ENCONTRAR CHAVE
-// ======================================================
-
+// --- ENCONTRAR CHAVE ---
 function encontrarChave(str) {
-
     const ufsValidas = Object.keys(estadoNomes);
-
     const tiposValidos = ["55", "59", "65"];
 
     for (let i = 0; i <= str.length - 44; i++) {
-
         const c = str.slice(i, i + 44);
-
-        const uf = c.slice(0, 2);
+        const uf  = c.slice(0, 2);
         const ano = Number(c.slice(2, 4));
         const mes = Number(c.slice(4, 6));
-        const yy = c.slice(20, 22);
+        const yy  = c.slice(20, 22);
 
         if (
-
             ufsValidas.includes(uf) &&
-            ano >= 6 &&
-            ano <= 30 &&
-            mes >= 1 &&
-            mes <= 12 &&
+            ano >= 6 && ano <= 30 &&
+            mes >= 1 && mes <= 12 &&
             tiposValidos.includes(yy)
-
         ) {
-
             return c;
         }
     }
-
     return null;
 }
 
-
-// ======================================================
-// OCR
-// ======================================================
-
+// --- LER NOTA ---
 async function lerNota(arquivo) {
-
     if (!arquivo) return;
-
-    statusOcr.textContent = "⏳ Lendo imagem...";
+    statusOcr.textContent = "⏳ Lendo imagem... aguarde.";
     statusOcr.style.color = "blue";
 
     try {
-
         const rotacoes = [0, 90, 180, 270];
 
         for (const graus of rotacoes) {
+            if (graus > 0) statusOcr.textContent = `⏳ Tentando rotação ${graus}°...`;
 
-            if (graus > 0) {
+            const imagemProcessada = await preprocessarImagem(arquivo, graus);
+            const result = await Tesseract.recognize(imagemProcessada, 'por+eng', {
+                tessedit_pageseg_mode: '6'
+            });
 
-                statusOcr.textContent =
-                    `⏳ Tentando rotação ${graus}°...`;
-            }
-
-            const imagemProcessada =
-                await preprocessarImagem(arquivo, graus);
-
-            const result = await Tesseract.recognize(
-
-                imagemProcessada,
-
-                'por+eng',
-
-                {
-                    tessedit_pageseg_mode: '11'
-                }
-            );
-
-            const textoLimpo =
-                result.data.text.replace(/[^0-9]/g, '');
-
-            const chave = encontrarChave(textoLimpo);
+            const chave = encontrarChave(result.data.text.replace(/[^0-9]/g, ''));
 
             if (chave) {
-
                 echave.value = chave;
-
-                statusOcr.textContent =
-                    graus > 0
-                        ? `✅ Chave encontrada (${graus}°)`
-                        : "✅ Chave encontrada";
-
+                statusOcr.textContent = graus > 0
+                    ? `✅ Chave identificada! (imagem estava ${graus}° rotacionada)`
+                    : "✅ Chave identificada!";
                 statusOcr.style.color = "green";
-
                 verificar();
-
                 return;
             }
         }
 
-        statusOcr.innerHTML = `
-            ❌ Não consegui identificar a chave.<br>
-            <small>
-                Digite ou cole manualmente.
-            </small>
-        `;
-
+        statusOcr.innerHTML = `❌ Não consegui ler a chave automaticamente.<br>
+        <small style="color:#888">Digite ou cole a chave manualmente no campo acima.</small>`;
         statusOcr.style.color = "red";
 
     } catch (erro) {
-
-        console.error(erro);
-
-        statusOcr.textContent =
-            "⚠️ Erro ao processar imagem.";
-
+        console.error("Erro detalhado:", erro.message, erro);
+        statusOcr.textContent = "⚠️ Erro ao processar imagem.";
         statusOcr.style.color = "orange";
     }
 }
 
 
-// ======================================================
-// DRAG AND DROP
-// ======================================================
-
+// --- ARRASTAR E SOLTAR ---
 ['dragover', 'dragleave', 'drop'].forEach(eventName => {
-
     dropZone.addEventListener(eventName, (e) => {
-
         e.preventDefault();
         e.stopPropagation();
     });
 });
 
-dropZone.addEventListener('dragover', () => {
-
-    dropZone.classList.add('dragover');
-});
-
-dropZone.addEventListener('dragleave', () => {
-
-    dropZone.classList.remove('dragover');
-});
+dropZone.addEventListener('dragover', () => dropZone.classList.add('dragover'));
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
 
 dropZone.addEventListener('drop', (e) => {
-
     dropZone.classList.remove('dragover');
-
     const arquivo = e.dataTransfer.files[0];
-
     lerNota(arquivo);
 });
 
-
-// ======================================================
-// COLAR IMAGEM
-// ======================================================
-
+// --- BOTÃO COLAR IMAGEM ---
 bColarImagem.onclick = async () => {
-
     try {
-
         const itens = await navigator.clipboard.read();
-
         for (const item of itens) {
-
-            if (
-                item.types.some(type =>
-                    type.startsWith('image/')
-                )
-            ) {
-
-                const blob = await item.getType(
-
-                    item.types.find(t =>
-                        t.startsWith('image/')
-                    )
-                );
-
+            if (item.types.some(type => type.startsWith('image/'))) {
+                const blob = await item.getType(item.types.find(t => t.startsWith('image/')));
                 lerNota(blob);
-
                 return;
             }
         }
-
-        alert("Nenhuma imagem encontrada.");
-
+        alert("Nenhuma imagem encontrada na área de transferência.");
     } catch (err) {
-
-        alert("Erro ao acessar clipboard.");
+        alert("Erro ao acessar clipboard. Tente Ctrl+V.");
     }
 };
 
+// --- CLIQUE NO INPUT DE ARQUIVO ---
+inputImagem.addEventListener("change", (e) => lerNota(e.target.files[0]));
 
-// ======================================================
-// INPUT FILE
-// ======================================================
-
-inputImagem.addEventListener("change", (e) => {
-
-    lerNota(e.target.files[0]);
-});
-
-
-// ======================================================
-// COLAR TEXTO
-// ======================================================
-
+// --- COLAR TEXTO ---
 bColar.onclick = async () => {
-
     try {
-
-        const texto =
-            await navigator.clipboard.readText();
-
-        echave.value =
-            texto.replace(/[^0-9]/g, '');
-
+        const texto = await navigator.clipboard.readText();
+        echave.value = texto.replace(/[^0-9]/g, '');
         verificar();
-
     } catch (erro) {
-
-        alert("Não foi possível colar.");
+        alert("Não foi possível colar o conteúdo");
     }
-};
+}
 
+echave.addEventListener("input", () => verificar());
 
-
-
+// --- LÓGICA DE VALIDAÇÃO E REDIRECIONAMENTO ---
 function verificar() {
-
-
-    document.getElementById("link1").style.display = "none";
-    document.getElementById("link2").style.display = "none";
-    document.getElementById("botoes1").style.display = "none";
-    document.getElementById("botoes2").style.display = "none";
-    document.getElementById("mensagem").style.display = "none";
-    document.getElementById("resultado").style.display = "none";
-
+    const idsParaEsconder = ["link1", "link2", "botoes1", "botoes2", "mensagem", "resultado"];
+    idsParaEsconder.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = "none";
+    });
 
     let chave = echave.value.replace(/[^0-9]/g, '');
 
-    if (chave.length < 44) {
-        document.getElementById("mensagem").style.display = "none";
-        return;
-    }
-
+    if (chave.length < 44) return;
     if (chave.length > 44) {
-        escreverMensage("Chave invalida. \n Verifique se os digitos estao corretos e tente novamente.");
-
+        escreverMensage("Chave inválida. Verifique os dígitos.");
         return;
     }
 
@@ -492,196 +308,82 @@ function verificar() {
     const sat = chave.slice(22, 25);
     const numero = chave.slice(25, 34);
 
-
-    let url = '';
-    let url2 = ''
-
-
     if (Number(mes) < 1 || Number(mes) > 12) {
-        escreverMensage("Chave invalida. Digitos 3º e 4º invalidos.");
-        document.getElementById("resultado").style.display = "none";
+        escreverMensage("Chave inválida. Mês inválido.");
         return;
     }
 
-    if (chave.length === 44 && !estadoNomes[uf]) {
-        escreverMensage("Chave invalida. Digitos 1º e 2º, referentes ao estado invalidos.");
-        document.getElementById("resultado").style.display = "none";
+    if (!estadoNomes[uf]) {
+        escreverMensage("Chave inválida. UF não reconhecida.");
         return;
     }
-
-
 
     if (yy === "55") {
-        url = universalLink;
-        url2 = universalLink2;
-        document.getElementById("resultado").style.display = "grid";
-        document.getElementById("link2").style.display = "flex";
-        document.getElementById("botoes2").style.display = "flex";
-        link21.href = url;
-        link22.href = url2;
-        link21.textContent = url;
-        link22.textContent = url2;
+        exibirResultadoNfe(universalLink, universalLink2);
     } else if (yy === "59") {
-        url = satLinks[uf];
-        document.getElementById("resultado").style.display = "grid";
-        document.getElementById("link1").style.display = "flex";
-        document.getElementById("botoes1").style.display = "flex";
-        link.href = url;
-        link.textContent = url;
+        exibirResultadoSimples(satLinks[uf]);
     } else if (yy === "65") {
-        url = nfceLinks[uf];
-        document.getElementById("resultado").style.display = "grid";
-        document.getElementById("link1").style.display = "flex";
-        document.getElementById("botoes1").style.display = "flex";
-
-        link.href = url;
-        link.textContent = url;
-    } else if (chave.length === 44) {
-        escreverMensage("Chave invalida. Digitos 21º e 22º invalidos.");
+        exibirResultadoSimples(nfceLinks[uf]);
+    } else {
+        escreverMensage("Chave inválida. Tipo de documento desconhecido.");
         return;
     }
 
-
-
-    displayestado.textContent = estadoNomes[uf];
-    displaymes.textContent = mes;
-    displayano.textContent = "20" + ano;
-    displaycnpj.textContent = cnpj;
-    displaysat.textContent = sat;
-    displaynumero.textContent = numero;
-
-
-
+    document.getElementById("displayestado").textContent = estadoNomes[uf];
+    document.getElementById("displaymes").textContent = mes;
+    document.getElementById("displayano").textContent = "20" + ano;
+    document.getElementById("displaycnpj").textContent = cnpj;
+    document.getElementById("displaysat").textContent = sat;
+    document.getElementById("displaynumero").textContent = numero;
 }
 
-document.getElementById("abrirLink").onclick = function () {
-
-    const msgE = "Erro ao abrir a página";
-    document.getElementById("mensagem").style.display = "none";
-
-    try {
-        let chave = echave.value.replace(/[^0-9]/g, '');
-        const url = link.href;
-
-        navigator.clipboard.writeText(chave);
-        window.open(url, '_blank');
-
-    } catch (E) {
-        escreverMensage(msgE);
-    }
+// --- FUNÇÕES AUXILIARES ---
+function exibirResultadoSimples(url) {
+    document.getElementById("resultado").style.display = "grid";
+    document.getElementById("link1").style.display = "flex";
+    document.getElementById("botoes1").style.display = "flex";
+    const linkEl = document.getElementById("link");
+    linkEl.href = url;
+    linkEl.textContent = url;
 }
 
-
-
-
-
-document.getElementById("abrirLink1").onclick = function () {
-
-    const msgE = "Erro ao abrir a página";
-    document.getElementById("mensagem").style.display = "none";
-
-    try {
-        let chave = echave.value.replace(/[^0-9]/g, '');
-        const url = link21.href;
-
-        navigator.clipboard.writeText(chave);
-        window.open(url, '_blank');
-
-    } catch (E) {
-        escreverMensage(msgE);
-    }
+function exibirResultadoNfe(url1, url2) {
+    document.getElementById("resultado").style.display = "grid";
+    document.getElementById("link2").style.display = "flex";
+    document.getElementById("botoes2").style.display = "flex";
+    document.getElementById("link21").href = url1;
+    document.getElementById("link21").textContent = url1;
+    document.getElementById("link22").href = url2;
+    document.getElementById("link22").textContent = url2;
 }
 
-document.getElementById("abrirLink2").onclick = function () {
-
-    const msgE = "Erro ao abrir a página";
-    document.getElementById("mensagem").style.display = "none";
-
-    try {
-        let chave = echave.value.replace(/[^0-9]/g, '');
-        const url2 = link22.href;
-
-        navigator.clipboard.writeText(chave);
-        window.open(url2, '_blank');
-
-    } catch (E) {
-        escreverMensage(msgE);
-    }
-}
-
-let tempo = null;
-
-document.getElementById("copiarChave").onclick = async function () {
-
-    const msg1 = ("Chave copiada com sucesso");
-    const msg2 = ("erro ao copiar");
-    document.getElementById("mensagem").style.display = "none";
-
+function abrirEcopiar(url) {
+    if (!url || url === "#") return;
     let chave = echave.value.replace(/[^0-9]/g, '');
-    try {
-        await navigator.clipboard.writeText(chave);
-        mensagem.textContent = msg1;
-
-    } catch (error) {
-        mensagem.textContent = msg2;
-
-    }
-
-    document.getElementById("mensagem").style.display = "block";
-
-    if (tempo) {
-        clearTimeout(tempo);
-    }
-    tempo = setTimeout(() => {
-        document.getElementById("mensagem").style.display = "none";
-    }, 3000);
-
+    navigator.clipboard.writeText(chave);
+    window.open(url, '_blank');
 }
 
-
-document.getElementById("copiarChave1").onclick = async function () {
-
-    const msg1 = ("Chave copiada com sucesso");
-    const msg2 = ("erro ao copiar");
-    document.getElementById("mensagem").style.display = "none";
-    const echave = document.getElementById("chave");
-    let chave = echave.value.replace(/[^0-9]/g, '');
-    try {
-        await navigator.clipboard.writeText(chave);
-        mensagem.textContent = msg1;
-
-    } catch (error) {
-        mensagem.textContent = msg2;
-
-    }
-
-    document.getElementById("mensagem").style.display = "block";
-
-    if (tempo) {
-        clearTimeout(tempo);
-    }
-    tempo = setTimeout(() => {
-        document.getElementById("mensagem").style.display = "none";
-    }, 3000);
-
-}
-
-document.getElementById("pSefaz").onclick = function () {
-    document.getElementById("cSefaz").style.display = "flex";
-    document.getElementById("cCnpj").style.display = "none";
-}
-
+document.getElementById("abrirLink").onclick = () => abrirEcopiar(document.getElementById("link").href);
+document.getElementById("abrirLink1").onclick = () => abrirEcopiar(document.getElementById("link21").href);
+document.getElementById("abrirLink2").onclick = () => abrirEcopiar(document.getElementById("link22").href);
 
 function escreverMensage(msg) {
-    let tempoM = null;
     const mensagem = document.getElementById("mensagem");
     mensagem.textContent = msg;
     mensagem.style.display = "block";
-    if (tempoM) {
-        clearTimeout(tempoM);
-        tempoM = null;
-    }
-    tempoM = setTimeout(() => {
-        mensagem.style.display = "none";
-    }, 10);
+    setTimeout(() => { mensagem.style.display = "none"; }, 4000);
 }
+
+async function copiarChave() {
+    let chave = echave.value.replace(/[^0-9]/g, '');
+    try {
+        await navigator.clipboard.writeText(chave);
+        escreverMensage("Chave copiada com sucesso!");
+    } catch (e) {
+        escreverMensage("Erro ao copiar.");
+    }
+}
+
+document.getElementById("copiarChave").onclick = copiarChave;
+document.getElementById("copiarChave1").onclick = copiarChave;

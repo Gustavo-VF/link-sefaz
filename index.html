@@ -30,7 +30,7 @@
             <div class="divPadrao inputSefaz">
                 <h1>Redirecionador Sefaz</h1>
                 <Div id="mensagems">
-                    <h2>Preencha o campo com a chave de acesso</h2>
+                     <h2>Preencha a chave ou use uma imagem da nota</h2>
 
                 </Div>
                 <input type="text" id="chave">
@@ -63,6 +63,20 @@
                     <button id="copiarChave1">Copiar chave limpa</button>
                     <button id="abrirLink1">Abrir link 1 em outra aba</button>
                     <button id="abrirLink2">Abrir link 2 em outra aba</button>
+                </div>
+
+                 <!-- Área de Drop e Botão de Colar Imagem -->
+                <div id="dropZone" class="drop-zone">
+                    <label for="inputImagem" class="drop-label">
+                        📷 <strong>Arraste a nota aqui ou clique para selecionar</strong>
+                    </label>
+                    <input type="file" id="inputImagem" accept="image/*" style="display: none;">
+                    
+                    <button id="bColarImagem" type="button" class="btn-colar-img">
+                        📋 Colar Imagem
+                    </button>
+                    
+                    <p id="statusOcr" class="status-texto">📷 Pronto para ler imagem.</p>
                 </div>
 
 

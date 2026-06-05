@@ -4,124 +4,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="img/renovoLogo.png" type="imagem/png">
+    <link rel="icon" href="img/renovoLogo.png" type="image/png">
     <title>Renovo | Redirecionador Sefaz</title>
     <link rel="stylesheet" href="style.css">
-
 </head>
-<script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
-<body>
-    <div class="divPadrao" id="mensagem"></div>
-    <div class="menuBar">
 
-        <a href="https://renovoauditoria.com.br/ " aria-label="Renovo" title="Logo-Renovo">
+<script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
+
+<body>
+
+    <div class="divPadrao" id="mensagem"></div>
+
+    <div class="menuBar">
+        <a href="https://renovoauditoria.com.br/" aria-label="Renovo" title="Logo-Renovo">
             <img id="Logo" src="img/renovoLogo.jpeg" alt="Renovo">
         </a>
-
         <nav class="navMenu">
-            <a href='#'>Pesquisa Sefaz</a>
-            <a href='PesquisaCnpj/cnpj.html'>Pesquisa CNPJ</a>
-            <a href='links/links.html'>Links</a>
+            <a href="#">Pesquisa Sefaz</a>
+            <a href="PesquisaCnpj/cnpj.html">Pesquisa CNPJ</a>
+            <a href="links/links.html">Links</a>
         </nav>
-
     </div>
+
     <main>
         <div class="layout">
             <div class="divPadrao inputSefaz">
-                <h1>Redirecionador Sefaz</h1>
-                <Div id="mensagems">
-                     <h2>Preencha a chave ou use uma imagem da nota</h2>
 
-                </Div>
-                <input type="text" id="chave">
+                <h1>Redirecionador Sefaz</h1>
+
+                <div id="mensagems">
+                    <h2>Preencha a chave de acesso ou use uma imagem da nota</h2>
+                </div>
+
+                <input type="text" id="chave" placeholder="Cole a chave de acesso aqui...">
                 <button id="bColar">Colar</button>
 
                 <div class="resultado" id="resultado">
-
-                    <p><strong>Estado: </strong><span id="displayestado"></span></p>
-                    <p><strong>Mes: </strong><span id="displaymes"></span></p>
-                    <p><strong>Ano: </strong><span id="displayano"></span></p>
-                    <p><strong>CNPJ: </strong><span id="displaycnpj"></span></p>
-                    <p><strong>Sat: </strong><span id="displaysat"></span></p>
-                    <p><strong>Nº: </strong><span id="displaynumero"></span></p>
-
-
+                    <p><strong>Estado</strong><span id="displayestado"></span></p>
+                    <p><strong>Mês</strong><span id="displaymes"></span></p>
+                    <p><strong>Ano</strong><span id="displayano"></span></p>
+                    <p><strong>CNPJ</strong><span id="displaycnpj"></span></p>
+                    <p><strong>SAT</strong><span id="displaysat"></span></p>
+                    <p><strong>Nº</strong><span id="displaynumero"></span></p>
                 </div>
+
                 <div class="link1" id="link1">
-                    <p><strong>Link: </strong><a id="link" href="#" target="_blank"></a></p>
+                    <p><strong>Link</strong> <a id="link" href="#" target="_blank"></a></p>
                 </div>
+
                 <div class="link2" id="link2">
-                    <p><strong>Link-1: </strong><a id="link21" class="link" href="#" target="_blank"></a></p>
-                    <p><strong>Link-2: </strong><a id="link22" class="link" href="#" target="_blank"></a></a></p>
+                    <p><strong>Link 1</strong> <a id="link21" class="link" href="#" target="_blank"></a></p>
+                    <p><strong>Link 2</strong> <a id="link22" class="link" href="#" target="_blank"></a></p>
                 </div>
 
                 <div class="botoes1" id="botoes1">
                     <button id="copiarChave">Copiar chave limpa</button>
                     <button id="abrirLink">Abrir link em outra aba</button>
                 </div>
+
                 <div class="botoes2" id="botoes2">
                     <button id="copiarChave1">Copiar chave limpa</button>
                     <button id="abrirLink1">Abrir link 1 em outra aba</button>
                     <button id="abrirLink2">Abrir link 2 em outra aba</button>
                 </div>
 
-                 <!-- Área de Drop e Botão de Colar Imagem -->
+                <!-- Área de Drop e Botão de Colar Imagem -->
                 <div id="dropZone" class="drop-zone">
                     <label for="inputImagem" class="drop-label">
                         📷 <strong>Arraste a nota aqui ou clique para selecionar</strong>
                     </label>
-                    <input type="file" id="inputImagem" accept="image/*" style="display: none;">
-                    
+                    <input type="file" id="inputImagem" accept="image/*" style="display:none;">
+
                     <button id="bColarImagem" type="button" class="btn-colar-img">
                         📋 Colar Imagem
                     </button>
-                    
+
                     <p id="statusOcr" class="status-texto">📷 Pronto para ler imagem.</p>
                 </div>
 
-
-                <div class=" on-Infos ">
+                <!-- Informações -->
+                <div class="on-Infos">
                     <div class="infos">
                         <h1>Informações</h1>
-                        <h2>Instruções: (verificação do 21º e 22º dígitos)</h2>
+
+                        <h2>21º e 22º dígitos — Tipo de documento</h2>
                         <ul>
-                            <li>55 → NF federal</li>
-                            <li>59 → Link SAT para o estado especificado</li>
-                            <li>65 → Link NFC-e para o estado especificado</li>
+                            <li><span class="num">55</span> NF federal</li>
+                            <li><span class="num">59</span> Link SAT para o estado especificado</li>
+                            <li><span class="num">65</span> Link NFC-e para o estado especificado</li>
                         </ul>
-                        <h2>Instruções: (verificação do 1º e 2º dígitos)</h2>
+
+                        <h2>1º e 2º dígitos — Estado de origem</h2>
                         <ol class="estados">
-                            <li><span class="num">11:</span> Rondônia</li>
-                            <li><span class="num">12:</span> Acre</li>
-                            <li><span class="num">13:</span> Amazonas</li>
-                            <li><span class="num">14:</span> Roraima</li>
-                            <li><span class="num">15:</span> Pará</li>
-                            <li><span class="num">16:</span> Amapá</li>
-                            <li><span class="num">17:</span> Tocantins</li>
-
-                            <li><span class="num">21:</span> Maranhão</li>
-                            <li><span class="num">22:</span> Piauí</li>
-                            <li><span class="num">23:</span> Ceará</li>
-                            <li><span class="num">24:</span> Rio Grande do Norte</li>
-                            <li><span class="num">25:</span> Paraíba</li>
-                            <li><span class="num">26:</span> Pernambuco</li>
-                            <li><span class="num">27:</span> Alagoas</li>
-                            <li><span class="num">28:</span> Sergipe</li>
-                            <li><span class="num">29:</span> Bahia</li>
-
-                            <li><span class="num">31:</span> Minas Gerais</li>
-                            <li><span class="num">32:</span> Espírito Santo</li>
-                            <li><span class="num">33:</span> Rio de Janeiro</li>
-                            <li><span class="num">35:</span> São Paulo</li>
-
-                            <li><span class="num">41:</span> Paraná</li>
-                            <li><span class="num">42:</span> Santa Catarina</li>
-                            <li><span class="num">43:</span> Rio Grande do Sul</li>
-
-                            <li><span class="num">50:</span> Mato Grosso do Sul</li>
-                            <li><span class="num">51:</span> Mato Grosso</li>
-                            <li><span class="num">52:</span> Goiás</li>
-                            <li><span class="num">53:</span> Distrito Federal</li>
+                            <li><span class="num">11</span> Rondônia</li>
+                            <li><span class="num">12</span> Acre</li>
+                            <li><span class="num">13</span> Amazonas</li>
+                            <li><span class="num">14</span> Roraima</li>
+                            <li><span class="num">15</span> Pará</li>
+                            <li><span class="num">16</span> Amapá</li>
+                            <li><span class="num">17</span> Tocantins</li>
+                            <li><span class="num">21</span> Maranhão</li>
+                            <li><span class="num">22</span> Piauí</li>
+                            <li><span class="num">23</span> Ceará</li>
+                            <li><span class="num">24</span> Rio Grande do Norte</li>
+                            <li><span class="num">25</span> Paraíba</li>
+                            <li><span class="num">26</span> Pernambuco</li>
+                            <li><span class="num">27</span> Alagoas</li>
+                            <li><span class="num">28</span> Sergipe</li>
+                            <li><span class="num">29</span> Bahia</li>
+                            <li><span class="num">31</span> Minas Gerais</li>
+                            <li><span class="num">32</span> Espírito Santo</li>
+                            <li><span class="num">33</span> Rio de Janeiro</li>
+                            <li><span class="num">35</span> São Paulo</li>
+                            <li><span class="num">41</span> Paraná</li>
+                            <li><span class="num">42</span> Santa Catarina</li>
+                            <li><span class="num">43</span> Rio Grande do Sul</li>
+                            <li><span class="num">50</span> Mato Grosso do Sul</li>
+                            <li><span class="num">51</span> Mato Grosso</li>
+                            <li><span class="num">52</span> Goiás</li>
+                            <li><span class="num">53</span> Distrito Federal</li>
                         </ol>
                     </div>
                 </div>
@@ -129,19 +130,17 @@
             </div>
 
 
-            <footer class="rodape">
-                <p>
-                    • Ferramenta interna de apoio operacional<br>
-                    • Uso interno <br>
-                    • Desenvolvido Por Gustavo Vaz
-                </p>
-            </footer>
         </div>
     </main>
-
+    <footer class="rodape">
+        <p>
+            • Ferramenta interna de apoio operacional<br>
+            • Uso interno<br>
+            • Desenvolvido por Gustavo Vaz
+        </p>
+    </footer>
 
     <script src="script.js"></script>
 </body>
-
 
 </html>

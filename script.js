@@ -123,49 +123,56 @@ const universalLink2 = "https://meudanfe.com.br/#";
 // --- FUNÇÃO CENTRAL DE LEITURA DE IMAGEM ---
 // --- PRÉ-PROCESSAMENTO ---
 async function preprocessarImagem(arquivo, graus = 0) {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        const url = URL.createObjectURL(arquivo);
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(arquivo);
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Erro ao carregar imagem.")); };
+    img.onload = () => {
+      try {
+        const escala = 3; // aumentei de 2x pra 3x
+        const canvas = document.createElement('canvas');
+        const rad = graus * Math.PI / 180;
 
-        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Erro ao carregar imagem.")); };
+        if (graus === 90 || graus === 270) {
+          canvas.width = img.height * escala;
+          canvas.height = img.width * escala;
+        } else {
+          canvas.width = img.width * escala;
+          canvas.height = img.height * escala;
+        }
 
-        img.onload = () => {
-            try {
-                const canvas = document.createElement('canvas');
-                const rad = graus * Math.PI / 180;
+        const ctx = canvas.getContext('2d');
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.rotate(rad);
+        ctx.drawImage(img, -img.width * escala / 2, -img.height * escala / 2, img.width * escala, img.height * escala);
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
 
-                // Troca largura/altura se rotação for 90 ou 270
-                if (graus === 90 || graus === 270) {
-                    canvas.width = img.height * 2;
-                    canvas.height = img.width * 2;
-                } else {
-                    canvas.width = img.width * 2;
-                    canvas.height = img.height * 2;
-                }
+        // 1. Pegar pixels
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
 
-                const ctx = canvas.getContext('2d');
-                ctx.translate(canvas.width / 2, canvas.height / 2);
-                ctx.rotate(rad);
-                ctx.drawImage(img, -img.width, -img.height, img.width * 2, img.height * 2);
-                ctx.setTransform(1, 0, 0, 1, 0, 0);
+        // 2. Converter pra cinza
+        for (let i = 0; i < data.length; i += 4) {
+          const gray = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
+          data[i] = data[i+1] = data[i+2] = gray;
+        }
 
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const data = imageData.data;
-                for (let i = 0; i < data.length; i += 4) {
-                    const gray = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
-                    data[i] = data[i+1] = data[i+2] = gray;
-                }
-                ctx.putImageData(imageData, 0, 0);
-                URL.revokeObjectURL(url);
-                canvas.toBlob((blob) => {
-                    if (blob) resolve(blob);
-                    else reject(new Error("Falha ao converter canvas."));
-                }, 'image/png');
-            } catch (e) { URL.revokeObjectURL(url); reject(e); }
-        };
+        // 3. Binarização adaptativa simples (threshold em 128)
+        for (let i = 0; i < data.length; i += 4) {
+          const val = data[i] < 128 ? 0 : 255;
+          data[i] = data[i+1] = data[i+2] = val;
+        }
 
-        img.src = url;
-    });
+        ctx.putImageData(imageData, 0, 0);
+        URL.revokeObjectURL(url);
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error("Falha ao converter canvas."));
+        }, 'image/png');
+      } catch (e) { URL.revokeObjectURL(url); reject(e); }
+    };
+    img.src = url;
+  });
 }
 
 // --- ENCONTRAR CHAVE ---
@@ -205,9 +212,11 @@ async function lerNota(arquivo) {
             if (graus > 0) statusOcr.textContent = `⏳ Tentando rotação ${graus}°...`;
 
             const imagemProcessada = await preprocessarImagem(arquivo, graus);
-            const result = await Tesseract.recognize(imagemProcessada, 'por+eng', {
-                tessedit_pageseg_mode: '6'
-            });
+           const result = await Tesseract.recognize(imagemProcessada, 'por', {
+  tessedit_pageseg_mode: '6',
+  tessedit_char_whitelist: '0123456789'
+});
+           
 
             const chave = encontrarChave(result.data.text.replace(/[^0-9]/g, ''));
 
@@ -300,6 +309,9 @@ function verificar() {
         return;
     }
 
+    
+    
+
     const uf = chave.slice(0, 2);
     const mes = chave.slice(4, 6);
     const ano = chave.slice(2, 4);
@@ -318,6 +330,20 @@ function verificar() {
         return;
     }
 
+if (!validarDV(chave)) {
+        escreverMensage("Chave inválida. Dígito verificador incorreto.");
+        return;
+    }
+
+     // ✅ AQUI — validação do tipo de emissão
+    const tipoEmissao = chave.slice(34, 35);
+    const tiposEmissaoValidos = ["1", "2", "3", "4", "5", "6", "7", "9"];
+    if (!tiposEmissaoValidos.includes(tipoEmissao)) {
+        escreverMensage("Chave inválida. Tipo de emissão desconhecido.");
+        return;
+    }
+    
+
     if (yy === "55") {
         exibirResultadoNfe(universalLink, universalLink2);
     } else if (yy === "59") {
@@ -329,13 +355,33 @@ function verificar() {
         return;
     }
 
+    
+
     document.getElementById("displayestado").textContent = estadoNomes[uf];
     document.getElementById("displaymes").textContent = mes;
     document.getElementById("displayano").textContent = "20" + ano;
     document.getElementById("displaycnpj").textContent = cnpj;
     document.getElementById("displaysat").textContent = sat;
     document.getElementById("displaynumero").textContent = numero;
+
+     document.getElementById("displaytiponota").textContent = 
+    yy === "55" ? "NF-e" : yy === "59" ? "SAT" : "NFC-e";
+
+      const tipoEmissaoNome = {
+        "1": "Normal",
+        "2": "Contingência FS-IA (Formulário de Segurança com IBPT Autorizado)",
+        "3": "SCAN (Sistema de Contingência do Ambiente Nacional) — descontinuado",
+        "4": "DPEC (Declaração Prévia de Emissão em Contingência) — descontinuado",
+        "5": "Contingência FS-DA (Formulário de Segurança para Impressão de DANFE)",
+        "6": "SVC-AN (SEFAZ Virtual de Contingência — Ambiente Nacional)",
+        "7": "SVC-RS (SEFAZ Virtual de Contingência — Rio Grande do Sul)",
+        "9": "Contingência Offline NFC-e"
+    };
+
+    const elEmissao = document.getElementById("displayemissao");
+    if (elEmissao) elEmissao.textContent = tipoEmissaoNome[tipoEmissao];
 }
+
 
 // --- FUNÇÕES AUXILIARES ---
 function exibirResultadoSimples(url) {
@@ -387,3 +433,21 @@ async function copiarChave() {
 
 document.getElementById("copiarChave").onclick = copiarChave;
 document.getElementById("copiarChave1").onclick = copiarChave;
+
+function validarDV(chave) {
+    // Algoritmo módulo 11 da chave de acesso NF-e
+    const pesos = [2, 3, 4, 5, 6, 7, 8, 9];
+    let soma = 0;
+    const digits = chave.slice(0, 43); // 43 primeiros dígitos
+    
+    for (let i = 0; i < digits.length; i++) {
+        const peso = pesos[(digits.length - 1 - i) % 8];
+        soma += parseInt(digits[i]) * peso;
+    }
+    
+    const resto = soma % 11;
+    const dvCalculado = resto < 2 ? 0 : 11 - resto;
+    const dvInformado = parseInt(chave[43]);
+    
+    return dvCalculado === dvInformado;
+}

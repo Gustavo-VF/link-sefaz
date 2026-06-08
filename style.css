@@ -204,6 +204,10 @@ body {
     grid-column: 1 / -1;
 }
 
+.resultado .col-23 {
+    grid-column: 2 / 4;
+}
+
 /* ===========================
    LINKS EXIBIDOS
 =========================== */

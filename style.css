@@ -212,7 +212,8 @@ body {
    LINKS EXIBIDOS
 =========================== */
 .link1,
-.link2 {
+.link2,
+#avisDV  {
     display: flex;
     flex-direction: column;
     font-size: 0.9rem;

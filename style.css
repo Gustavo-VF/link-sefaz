@@ -226,6 +226,12 @@ body {
     border: 1px solid var(--cinza-borda);
 }
 
+#avisDV {
+    color: orange;
+    text-align: center;
+    margin-top: 8px;
+}
+
 .link1 p,
 .link2 p {
     color: var(--cinza-leve);

@@ -330,9 +330,10 @@ function verificar() {
         return;
     }
 
-if (!validarDV(chave)) {
-        escreverMensage("Chave inválida. Dígito verificador incorreto.");
-       
+    if (!validarDV(chave)) {
+    document.getElementById("avisDV").style.display = "flex";
+    } else {
+    document.getElementById("avisDV").style.display = "none";
     }
 
      // ✅ AQUI — validação do tipo de emissão

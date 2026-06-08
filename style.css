@@ -200,6 +200,10 @@ body {
     font-size: 1rem;
 }
 
+.resultado .col-full {
+    grid-column: 1 / -1;
+}
+
 /* ===========================
    LINKS EXIBIDOS
 =========================== */

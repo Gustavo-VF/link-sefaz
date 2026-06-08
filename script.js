@@ -332,7 +332,7 @@ function verificar() {
 
 if (!validarDV(chave)) {
         escreverMensage("Chave inválida. Dígito verificador incorreto.");
-        return;
+       
     }
 
      // ✅ AQUI — validação do tipo de emissão

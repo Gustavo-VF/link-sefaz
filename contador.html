@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contador</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="layout">
+        <div class="divPadrao">
+            <h1 class="titulo">Contador de Acessos</h1>
+
+            <div class="resumo">
+                <div class="item">
+                    <strong>Online Agora</strong>
+                    <span id="contadorOnline">0</span>
+                </div>
+                <div class="item">
+                    <strong>Total Geral</strong>
+                    <span id="totalGeral">0</span>
+                </div>
+                <div class="item">
+                    <strong>Acessos Hoje</strong>
+                    <span id="acessosHoje">0</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="divPadrao">
+            <h2 class="subtitulo">Últimos 7 dias</h2>
+            <table id="tabelaDias">
+                <thead>
+                    <tr>
+                        <th>Dia</th>
+                        <th>Total (todos IPs)</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div class="divPadrao">
+            <h2 class="subtitulo">Acessos por IP</h2>
+            <table id="tabelaIps">
+                <thead>
+                    <tr>
+                        <th>IP</th>
+                        <th>Total Geral</th>
+                        <th>Por Dia (7 dias)</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script type="module" src="contador.js"></script>
+</body>
+
+</html>

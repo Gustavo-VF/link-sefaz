@@ -1,0 +1,121 @@
+:root {
+    --vermelho: #c73035;
+    --vermelho-escuro: #a32227;
+    --bege-fundo: #ecd9bc;
+    --bege-card: #F3EFE7;
+    --cinza-fundo: #f4f4f4;
+    --cinza-borda: #ddd5cb;
+    --texto: #2b2b2b;
+    --raio: 10px;
+}
+
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Inter, system-ui, Arial, sans-serif;
+    color: var(--texto);
+    background-color: var(--bege-fundo);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 40px 16px;
+}
+
+.layout {
+    width: 90%;
+    max-width: 900px;
+}
+
+.divPadrao {
+    background-color: var(--bege-card);
+    padding: 24px;
+    border: 2px solid var(--vermelho);
+    border-radius: 16px;
+    margin-bottom: 24px;
+}
+
+h1.titulo {
+    color: var(--vermelho);
+    font-weight: 800;
+    text-align: center;
+    margin: 0 0 24px;
+}
+
+/* ===== CARDS DE RESUMO ===== */
+.resumo {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    text-align: center;
+    background: var(--cinza-fundo);
+    border: 1px solid var(--cinza-borda);
+    border-radius: var(--raio);
+    padding: 18px 22px;
+}
+
+.resumo .item strong {
+    display: block;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #999;
+    margin-bottom: 4px;
+}
+
+.resumo .item span {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--vermelho);
+}
+
+@media (max-width: 640px) {
+    .resumo {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ===== TABELAS ===== */
+h2.subtitulo {
+    color: #555;
+    font-weight: 400;
+    font-size: 1.1rem;
+    margin: 0 0 12px;
+    text-align: center;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border: 1px solid var(--cinza-borda);
+    border-radius: var(--raio);
+    overflow: hidden;
+}
+
+thead {
+    background-color: var(--vermelho);
+}
+
+thead th {
+    color: white;
+    text-align: left;
+    padding: 12px 16px;
+    font-size: 0.8rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+tbody td {
+    padding: 12px 16px;
+    border-top: 1px solid var(--cinza-borda);
+    font-size: 0.95rem;
+    word-break: break-word;
+}
+
+tbody tr:nth-child(even) {
+    background-color: var(--cinza-fundo);
+}
+
+tbody tr:hover {
+    background-color: #fdf3f3;
+}

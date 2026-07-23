@@ -1,5 +1,60 @@
-// ======================================================
-// MANTENHA SEUS DICIONÁRIOS AQUI (satLinks, nfceLinks, etc)
+const estadoNomes = {
+    "11": "Rondônia",
+    "12": "Acre",
+    "13": "Amazonas",
+    "14": "Roraima",
+    "15": "Pará",
+    "16": "Amapá",
+    "17": "Tocantins",
+    "21": "Maranhão",
+    "22": "Piauí",
+    "23": "Ceará",
+    "24": "Rio Grande do Norte",
+    "25": "Paraíba",
+    "26": "Pernambuco",
+    "27": "Alagoas",
+    "28": "Sergipe",
+    "29": "Bahia",
+    "31": "Minas Gerais",
+    "32": "Espírito Santo",
+    "33": "Rio de Janeiro",
+    "35": "São Paulo",
+    "41": "Paraná",
+    "42": "Santa Catarina",
+    "43": "Rio Grande do Sul",
+    "50": "Mato Grosso do Sul",
+    "51": "Mato Grosso",
+    "52": "Goiás",
+    "53": "Distrito Federal"
+};
+
+const mesNome = {
+    "01": "Janeiro",
+    "02": "Fevereiro",
+    "03": "Março",
+    "04": "Abril",
+    "05": "Maio",
+    "06": "Junho",
+    "07": "Julho",
+    "08": "Agosto",
+    "09": "Setembro",
+    "10": "Outubro",
+    "11": "Novembro",
+    "12": "Dezembro"
+};
+
+const emissaoNomes = {
+    "1": "Emissão Normal",
+    "2": "Contingência FS-IA (Formulário de Segurança - Impressor Autônomo)",
+    "3": "Contingência SCAN (Sistema de Contingência do Ambiente Nacional)",
+    "4": "Contingência DPEC (Declaração Prévia de Emissão em Contingência)",
+    "5": "Contingência FS-DA (Formulário de Segurança - Documento Auxiliar)",
+    "6": "Contingência SVC-AN (Sistema de Contingência do Ambiente Nacional)",
+    "7": "Contingência SVC-RS (Sistema de Contingência do Rio Grande do Sul)",
+    "8": "Contingência SVC-SP (Sistema de Contingência de São Paulo)",
+    "9": "Contingência Offline (emissão sem conexão com a SEFAZ - NFC-e)"
+};
+
 const satLinks = {
     "11": "https://sistemas.sefaz.ro.gov.br/",
     "12": "https://www.sefaz.ac.gov.br/sat/",
@@ -60,331 +115,202 @@ const nfceLinks = {
     "53": "https://ww1.receita.fazenda.df.gov.br/servicos"
 };
 
-
-const mesNome = {
-    "01": "Jan",
-    "02": "Fev",
-    "03": "Mar",
-    "04": "Abr",
-    "05": "Mai",
-    "06": "Jun",
-    "07": "Jul",
-    "08": "Ago",
-    "09": "Set",
-    "10": "Out",
-    "11": "Nov",
-    "12": "Dez"
-};
-const estadoNomes = {
-    "11": "Rondônia",
-    "12": "Acre",
-    "13": "Amazonas",
-    "14": "Roraima",
-    "15": "Pará",
-    "16": "Amapá",
-    "17": "Tocantins",
-    "21": "Maranhão",
-    "22": "Piauí",
-    "23": "Ceará",
-    "24": "Rio Grande do Norte",
-    "25": "Paraíba",
-    "26": "Pernambuco",
-    "27": "Alagoas",
-    "28": "Sergipe",
-    "29": "Bahia",
-    "31": "Minas Gerais",
-    "32": "Espírito Santo",
-    "33": "Rio de Janeiro",
-    "35": "São Paulo",
-    "41": "Paraná",
-    "42": "Santa Catarina",
-    "43": "Rio Grande do Sul",
-    "50": "Mato Grosso do Sul",
-    "51": "Mato Grosso",
-    "52": "Goiás",
-    "53": "Distrito Federal"
-};
-
-// ========================================================
-
-// --- VARIÁREIS DE INTERFACE (Declarar apenas uma vez) ---
-// ========================================================
-
-const bColar = document.getElementById("bColar");
-const bColarImagem = document.getElementById("bColarImagem");
-const echave = document.getElementById("chave");
-const inputImagem = document.getElementById("inputImagem");
-const statusOcr = document.getElementById("statusOcr");
-const dropZone = document.getElementById("dropZone");
-
 const universalLink = "https://www.nfe.fazenda.gov.br/portal/consultaRecaptcha.aspx?tipoConsulta=resumo&tipoConteudo=7PhJ%20gAVw2g=";
 const universalLink2 = "https://meudanfe.com.br/#";
 
-// --- FUNÇÃO CENTRAL DE LEITURA DE IMAGEM ---
-// --- PRÉ-PROCESSAMENTO ---
-async function preprocessarImagem(arquivo, graus = 0) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const url = URL.createObjectURL(arquivo);
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Erro ao carregar imagem.")); };
-    img.onload = () => {
-      try {
-        const escala = 3; // aumentei de 2x pra 3x
-        const canvas = document.createElement('canvas');
-        const rad = graus * Math.PI / 180;
-
-        if (graus === 90 || graus === 270) {
-          canvas.width = img.height * escala;
-          canvas.height = img.width * escala;
-        } else {
-          canvas.width = img.width * escala;
-          canvas.height = img.height * escala;
-        }
-
-        const ctx = canvas.getContext('2d');
-        ctx.translate(canvas.width / 2, canvas.height / 2);
-        ctx.rotate(rad);
-        ctx.drawImage(img, -img.width * escala / 2, -img.height * escala / 2, img.width * escala, img.height * escala);
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-
-        // 1. Pegar pixels
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const data = imageData.data;
-
-        // 2. Converter pra cinza
-        for (let i = 0; i < data.length; i += 4) {
-          const gray = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
-          data[i] = data[i+1] = data[i+2] = gray;
-        }
-
-        // 3. Binarização adaptativa simples (threshold em 128)
-        for (let i = 0; i < data.length; i += 4) {
-          const val = data[i] < 128 ? 0 : 255;
-          data[i] = data[i+1] = data[i+2] = val;
-        }
-
-        ctx.putImageData(imageData, 0, 0);
-        URL.revokeObjectURL(url);
-        canvas.toBlob((blob) => {
-          if (blob) resolve(blob);
-          else reject(new Error("Falha ao converter canvas."));
-        }, 'image/png');
-      } catch (e) { URL.revokeObjectURL(url); reject(e); }
-    };
-    img.src = url;
-  });
-}
-
-// --- ENCONTRAR CHAVE ---
-function encontrarChave(str) {
-    const ufsValidas = Object.keys(estadoNomes);
-    const tiposValidos = ["55", "59", "65"];
-
-    for (let i = 0; i <= str.length - 44; i++) {
-        const c = str.slice(i, i + 44);
-        const uf  = c.slice(0, 2);
-        const ano = Number(c.slice(2, 4));
-        const mes = Number(c.slice(4, 6));
-        const yy  = c.slice(20, 22);
-
-        if (
-            ufsValidas.includes(uf) &&
-            ano >= 6 && ano <= 30 &&
-            mes >= 1 && mes <= 12 &&
-            tiposValidos.includes(yy)
-        ) {
-            return c;
-        }
-    }
-    return null;
-}
-
-// --- LER NOTA ---
-async function lerNota(arquivo) {
-    if (!arquivo) return;
-    statusOcr.textContent = "⏳ Lendo imagem... aguarde.";
-    statusOcr.style.color = "blue";
-
-    try {
-        const rotacoes = [0, 90, 180, 270];
-
-        for (const graus of rotacoes) {
-            if (graus > 0) statusOcr.textContent = `⏳ Tentando rotação ${graus}°...`;
-
-            const imagemProcessada = await preprocessarImagem(arquivo, graus);
-           const result = await Tesseract.recognize(imagemProcessada, 'por', {
-  tessedit_pageseg_mode: '6',
-  tessedit_char_whitelist: '0123456789'
-});
-           
-
-            const chave = encontrarChave(result.data.text.replace(/[^0-9]/g, ''));
-
-            if (chave) {
-                echave.value = chave;
-                statusOcr.textContent = graus > 0
-                    ? `✅ Chave identificada! (imagem estava ${graus}° rotacionada)`
-                    : "✅ Chave identificada!";
-                statusOcr.style.color = "green";
-                verificar();
-                return;
-            }
-        }
-
-        statusOcr.innerHTML = `❌ Não consegui ler a chave automaticamente.<br>
-        <small style="color:#888">Digite ou cole a chave manualmente no campo acima.</small>`;
-        statusOcr.style.color = "red";
-
-    } catch (erro) {
-        console.error("Erro detalhado:", erro.message, erro);
-        statusOcr.textContent = "⚠️ Erro ao processar imagem.";
-        statusOcr.style.color = "orange";
-    }
-}
 
 
-// --- ARRASTAR E SOLTAR ---
-['dragover', 'dragleave', 'drop'].forEach(eventName => {
-    dropZone.addEventListener(eventName, (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-    });
-});
+const estadoOut = document.getElementById("displayestado");
+const mesOut = document.getElementById("displaymes");
+const anoOut = document.getElementById("displayano");
+const cnpjOut = document.getElementById("displaycnpj");
+const satOut = document.getElementById("displaysat");
+const numeroOut = document.getElementById("displaynumero");
+const tipoOut = document.getElementById("displaytipo");
+const emissaoOut = document.getElementById("displayemissao");
+const validacaoOut = document.getElementById("displayvalidacao");
 
-dropZone.addEventListener('dragover', () => dropZone.classList.add('dragover'));
-dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+const chaveAcesso = document.getElementById("chave");
+const btnColar = document.getElementById("bColar");
 
-dropZone.addEventListener('drop', (e) => {
-    dropZone.classList.remove('dragover');
-    const arquivo = e.dataTransfer.files[0];
-    lerNota(arquivo);
-});
+const divResultado = document.getElementById("resultado");
 
-// --- BOTÃO COLAR IMAGEM ---
-bColarImagem.onclick = async () => {
-    try {
-        const itens = await navigator.clipboard.read();
-        for (const item of itens) {
-            if (item.types.some(type => type.startsWith('image/'))) {
-                const blob = await item.getType(item.types.find(t => t.startsWith('image/')));
-                lerNota(blob);
-                return;
-            }
-        }
-        alert("Nenhuma imagem encontrada na área de transferência.");
-    } catch (err) {
-        alert("Erro ao acessar clipboard. Tente Ctrl+V.");
-    }
-};
+const link = document.getElementById("link");
 
-// --- CLIQUE NO INPUT DE ARQUIVO ---
-inputImagem.addEventListener("change", (e) => lerNota(e.target.files[0]));
-
-// --- COLAR TEXTO ---
-bColar.onclick = async () => {
+btnColar.onclick = async () => {
     try {
         const texto = await navigator.clipboard.readText();
-        echave.value = texto.replace(/[^0-9]/g, '');
-        verificar();
-    } catch (erro) {
+        chaveAcesso.value = texto;
+    } catch (error) {
         alert("Não foi possível colar o conteúdo");
     }
-}
+    validar();
+};
 
-echave.addEventListener("input", () => verificar());
 
-// --- LÓGICA DE VALIDAÇÃO E REDIRECIONAMENTO ---
-function verificar() {
-    const idsParaEsconder = ["link1", "link2", "botoes1", "botoes2", "mensagem", "resultado"];
-    idsParaEsconder.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.display = "none";
-    });
+chaveAcesso.addEventListener("input", () => {
+    validar();
+});
 
-    let chave = echave.value.replace(/[^0-9]/g, '');
+function validar() {
 
-    if (chave.length < 44) return;
-    if (chave.length > 44) {
-        escreverMensage("Chave inválida. Verifique os dígitos.");
-        return;
-    }
+    document.getElementById("resultado").style.display = "none";
+    document.getElementById("link2").style.display = "none";
+    document.getElementById("botoes2").style.display = "none";
+    document.getElementById("link1").style.display = "none";
+    document.getElementById("botoes1").style.display = "none";
 
-    
-    
+    const valor = chaveAcesso.value;
 
-    const uf = chave.slice(0, 2);
-    const mes = chave.slice(4, 6);
-    const ano = chave.slice(2, 4);
-    const cnpj = chave.slice(6, 20);
-    const yy = chave.slice(20, 22);
-    const sat = chave.slice(22, 25);
-    const numero = chave.slice(25, 34);
-
-    if (Number(mes) < 1 || Number(mes) > 12) {
-        escreverMensage("Chave inválida. Mês inválido.");
-        return;
-    }
-
-    if (!estadoNomes[uf]) {
-        escreverMensage("Chave inválida. UF não reconhecida.");
-        return;
-    }
-
-    if (!validarDV(chave)) {
-    document.getElementById("avisDV").style.display = "flex";
+    if (!validarDV(valor)) {
+        escreverMensage("Dígito verificador da chave inválido.");
+        validacaoOut.textContent = "CALCULO CHAVE INVALIDA";
+        validacaoOut.style.color = "red";
     } else {
-    document.getElementById("avisDV").style.display = "none";
+        validacaoOut.textContent = "CALCULO CHAVE VALIDA";
+        validacaoOut.style.color = "green";
     }
 
-     // ✅ AQUI — validação do tipo de emissão
-    const tipoEmissao = chave.slice(34, 35);
-    const tiposEmissaoValidos = ["1", "2", "3", "4", "5", "6", "7", "9"];
-    if (!tiposEmissaoValidos.includes(tipoEmissao)) {
-        escreverMensage("Chave inválida. Tipo de emissão desconhecido.");
-        return;
-    }
-    
 
-    if (yy === "55") {
+
+    const estado = valor.slice(0, 2);
+    const ano = valor.slice(2, 4);
+    const mes = valor.slice(4, 6)
+    const cnpj = valor.slice(6, 20).toUpperCase();
+
+    const tipo = valor.slice(20, 22);
+    const sat = valor.slice(22, 25);
+    const numero = valor.slice(25, 34);
+    const emissao = valor.slice(34, 35);
+    const codnum = valor.slice(35, 43);
+    const dv = valor.slice(43, 44);
+
+
+    estadoOut.textContent = estadoNomes[estado] ?? "Invalido";
+    if (estadoOut.textContent == "Invalido") {
+        estadoOut.style.color = "red";
+    } else { estadoOut.style.color = "black"; }
+
+    mesOut.textContent = mesNome[mes] ?? "Invalido";
+    if (mesOut.textContent == "Invalido") {
+        mesOut.style.color = "red";
+    } else { mesOut.style.color = "black"; }
+
+    anoOut.textContent = "20" + ano;
+    const anoAtual = new Date().getFullYear();
+
+
+    if (ano.toString() > anoAtual.toString().slice(2, 4)) {
+        anoOut.style.color = "red";
+        anoOut.textContent = "Invalido"
+    } else {
+        anoOut.style.color = "black";
+    }
+
+
+    cnpjOut.textContent = cnpj;
+    if (!verificaCNPJ(cnpj)) {
+        cnpjOut.style.color = "red";
+    } else {
+        cnpjOut.style.color = "black";
+    }
+
+
+    tipoOut.textContent = tipo;
+
+
+    emissaoOut.textContent = emissaoNomes[emissao] ?? "Invalido";
+    if (emissaoOut == "Invalido") {
+        emissaoOut.style.color = "red";
+
+    } else {
+        emissaoOut.style.color = "black";
+    }
+
+
+    satOut.textContent = sat;
+
+
+    numeroOut.textContent = numero;
+
+
+    if (tipo.toString() === "55") {
         exibirResultadoNfe(universalLink, universalLink2);
-    } else if (yy === "59") {
-        exibirResultadoSimples(satLinks[uf]);
-    } else if (yy === "65") {
-        exibirResultadoSimples(nfceLinks[uf]);
+    } else if (tipo.toString() === "59") {
+        exibirResultadoSimples(satLinks[estado]);
+    } else if (tipo.toString() === "65") {
+        exibirResultadoSimples(nfceLinks[estado]);
     } else {
         escreverMensage("Chave inválida. Tipo de documento desconhecido.");
         return;
     }
 
-    
 
-    document.getElementById("displayestado").textContent = estadoNomes[uf];
-    document.getElementById("displaymes").textContent = mes;
-    document.getElementById("displayano").textContent = "20" + ano;
-    document.getElementById("displaycnpj").textContent = cnpj;
-    document.getElementById("displaysat").textContent = sat;
-    document.getElementById("displaynumero").textContent = numero;
 
-     document.getElementById("displaytiponota").textContent = 
-    yy === "55" ? "NF-e" : yy === "59" ? "SAT" : "NFC-e";
 
-      const tipoEmissaoNome = {
-        "1": "Normal",
-        "2": "Contingência FS-IA (Formulário de Segurança com IBPT Autorizado)",
-        "3": "SCAN (Sistema de Contingência do Ambiente Nacional) — descontinuado",
-        "4": "DPEC (Declaração Prévia de Emissão em Contingência) — descontinuado",
-        "5": "Contingência FS-DA (Formulário de Segurança para Impressão de DANFE)",
-        "6": "SVC-AN (SEFAZ Virtual de Contingência — Ambiente Nacional)",
-        "7": "SVC-RS (SEFAZ Virtual de Contingência — Rio Grande do Sul)",
-        "9": "Contingência Offline NFC-e"
+    divResultado.style.display = "grid";
+
+
+
+};
+
+
+function verificaCNPJ(cnpj) {
+    cnpj = cnpj.toUpperCase();
+
+    const digito1 = cnpj.slice(0, 1);
+    const digito2 = cnpj.slice(1, 2);
+    const digito3 = cnpj.slice(2, 3);
+    const digito4 = cnpj.slice(3, 4);
+    const digito5 = cnpj.slice(4, 5);
+    const digito6 = cnpj.slice(5, 6);
+    const digito7 = cnpj.slice(6, 7);
+    const digito8 = cnpj.slice(7, 8);
+    const digito9 = cnpj.slice(8, 9);
+    const digito10 = cnpj.slice(9, 10);
+    const digito11 = cnpj.slice(10, 11);
+    const digito12 = cnpj.slice(11, 12);
+    const digito13 = cnpj.slice(12, 13);
+    const digito14 = cnpj.slice(13, 14);
+
+    const DIGITOSVALORES = {
+        "0": 0, "1": 1, "2": 2, "3": 3, "4": 4,
+        "5": 5, "6": 6, "7": 7, "8": 8, "9": 9,
+        "A": 17, "B": 18, "C": 19, "D": 20, "E": 21,
+        "F": 22, "G": 23, "H": 24, "I": 25, "J": 26,
+        "K": 27, "L": 28, "M": 29, "N": 30, "O": 31,
+        "P": 32, "Q": 33, "R": 34, "S": 35, "T": 36,
+        "U": 37, "V": 38, "W": 39, "X": 40, "Y": 41,
+        "Z": 42
     };
 
-    const elEmissao = document.getElementById("displayemissao");
-    if (elEmissao) elEmissao.textContent = tipoEmissaoNome[tipoEmissao];
+
+    const pesosDV1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+    const pesosDV2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+
+    const somaDV1 =
+        DIGITOSVALORES[digito1] * pesosDV1[0] + DIGITOSVALORES[digito2] * pesosDV1[1] + DIGITOSVALORES[digito3] * pesosDV1[2] +
+        DIGITOSVALORES[digito4] * pesosDV1[3] + DIGITOSVALORES[digito5] * pesosDV1[4] + DIGITOSVALORES[digito6] * pesosDV1[5] +
+        DIGITOSVALORES[digito7] * pesosDV1[6] + DIGITOSVALORES[digito8] * pesosDV1[7] + DIGITOSVALORES[digito9] * pesosDV1[8] +
+        DIGITOSVALORES[digito10] * pesosDV1[9] + DIGITOSVALORES[digito11] * pesosDV1[10] + DIGITOSVALORES[digito12] * pesosDV1[11];
+
+    const restoDV1 = somaDV1 % 11;
+    const dv1 = restoDV1 < 2 ? 0 : 11 - restoDV1;
+
+    const somaDV2 =
+        DIGITOSVALORES[digito1] * pesosDV2[0] + DIGITOSVALORES[digito2] * pesosDV2[1] + DIGITOSVALORES[digito3] * pesosDV2[2] +
+        DIGITOSVALORES[digito4] * pesosDV2[3] + DIGITOSVALORES[digito5] * pesosDV2[4] + DIGITOSVALORES[digito6] * pesosDV2[5] +
+        DIGITOSVALORES[digito7] * pesosDV2[6] + DIGITOSVALORES[digito8] * pesosDV2[7] + DIGITOSVALORES[digito9] * pesosDV2[8] +
+        DIGITOSVALORES[digito10] * pesosDV2[9] + DIGITOSVALORES[digito11] * pesosDV2[10] + DIGITOSVALORES[digito12] * pesosDV2[11] +
+        dv1 * pesosDV2[12];
+
+    const restoDV2 = somaDV2 % 11;
+    const dv2 = restoDV2 < 2 ? 0 : 11 - restoDV2;
+
+    return dv1 === Number(digito13) && dv2 === Number(digito14);
+
 }
 
-
-// --- FUNÇÕES AUXILIARES ---
 function exibirResultadoSimples(url) {
     document.getElementById("resultado").style.display = "grid";
     document.getElementById("link1").style.display = "flex";
@@ -404,16 +330,19 @@ function exibirResultadoNfe(url1, url2) {
     document.getElementById("link22").textContent = url2;
 }
 
-function abrirEcopiar(url) {
-    if (!url || url === "#") return;
-    let chave = echave.value.replace(/[^0-9]/g, '');
-    navigator.clipboard.writeText(chave);
-    window.open(url, '_blank');
-}
 
 document.getElementById("abrirLink").onclick = () => abrirEcopiar(document.getElementById("link").href);
 document.getElementById("abrirLink1").onclick = () => abrirEcopiar(document.getElementById("link21").href);
 document.getElementById("abrirLink2").onclick = () => abrirEcopiar(document.getElementById("link22").href);
+
+
+
+function abrirEcopiar(url) {
+    if (!url || url === "#") return;
+    let chave = chaveAcesso.value;
+    navigator.clipboard.writeText(chave);
+    window.open(url, '_blank');
+}
 
 function escreverMensage(msg) {
     const mensagem = document.getElementById("mensagem");
@@ -423,7 +352,7 @@ function escreverMensage(msg) {
 }
 
 async function copiarChave() {
-    let chave = echave.value.replace(/[^0-9]/g, '');
+    let chave = chaveAcesso.value;
     try {
         await navigator.clipboard.writeText(chave);
         escreverMensage("Chave copiada com sucesso!");
@@ -436,19 +365,163 @@ document.getElementById("copiarChave").onclick = copiarChave;
 document.getElementById("copiarChave1").onclick = copiarChave;
 
 function validarDV(chave) {
-    // Algoritmo módulo 11 da chave de acesso NF-e
     const pesos = [2, 3, 4, 5, 6, 7, 8, 9];
     let soma = 0;
-    const digits = chave.slice(0, 43); // 43 primeiros dígitos
-    
+    const digits = chave.slice(0, 43).toUpperCase();
+
     for (let i = 0; i < digits.length; i++) {
         const peso = pesos[(digits.length - 1 - i) % 8];
-        soma += parseInt(digits[i]) * peso;
+        const valor = digits.charCodeAt(i) - 48;
+        soma += valor * peso;
     }
-    
+
     const resto = soma % 11;
     const dvCalculado = resto < 2 ? 0 : 11 - resto;
     const dvInformado = parseInt(chave[43]);
-    
-    return dvCalculado === dvInformado;
+
+    return dvCalculado == dvInformado;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ===== OCR / Leitura de imagem (novo) =====
+
+const dropZone = document.getElementById("dropZone");
+const inputImagem = document.getElementById("inputImagem");
+const bColarImagem = document.getElementById("bColarImagem");
+const statusOcr = document.getElementById("statusOcr");
+
+function atualizarStatusOcr(msg) {
+    statusOcr.textContent = msg;
+}
+
+async function lerCodigoDeBarras(imagemUrl) {
+    try {
+        const codeReader = new ZXing.BrowserMultiFormatReader();
+        const img = new Image();
+        img.src = imagemUrl;
+        await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = reject;
+        });
+        const resultado = await codeReader.decodeFromImage(img);
+        return resultado.getText();
+    } catch (erro) {
+        return null; // não achou código de barras, segue pro OCR
+    }
+}
+
+async function lerTextoPorOcr(imagemUrl) {
+    const { data } = await Tesseract.recognize(imagemUrl, 'por', {
+        logger: () => { } // sem logs no console
+    });
+    return data.text;
+}
+
+function extrairChaveDoTexto(texto) {
+    const limpo = texto.toUpperCase().replace(/[^0-9A-Z]/g, ''); // mantém números E letras A-Z
+    const match = limpo.match(/[0-9A-Z]{44}/); // procura sequência de 44 caracteres alfanuméricos
+    return match ? match[0] : limpo;
+}
+
+async function processarImagem(file) {
+    atualizarStatusOcr("🔍 Lendo imagem...");
+
+    const imagemUrl = URL.createObjectURL(file);
+
+    try {
+        // 1ª tentativa: código de barras (mais confiável)
+        let textoLido = await lerCodigoDeBarras(imagemUrl);
+
+        if (!textoLido) {
+            // 2ª tentativa: OCR de texto
+            atualizarStatusOcr("🔍 Código de barras não encontrado, tentando OCR...");
+            textoLido = await lerTextoPorOcr(imagemUrl);
+        }
+
+        const chaveExtraida = extrairChaveDoTexto(textoLido);
+
+        if (chaveExtraida.length === 44) {
+            chaveAcesso.value = chaveExtraida;
+            validar();
+            atualizarStatusOcr("✅ Chave lida com sucesso!");
+        } else {
+            atualizarStatusOcr("⚠️ Não foi possível identificar uma chave válida na imagem.");
+        }
+    } catch (erro) {
+        atualizarStatusOcr("❌ Erro ao processar imagem.");
+    } finally {
+        URL.revokeObjectURL(imagemUrl);
+    }
+}
+
+// Clique pra selecionar arquivo
+inputImagem.addEventListener("change", (event) => {
+    const file = event.target.files[0];
+    if (file) processarImagem(file);
+});
+
+// Arrastar e soltar
+dropZone.addEventListener("dragover", (event) => {
+    event.preventDefault();
+    dropZone.classList.add("drag-over");
+});
+
+dropZone.addEventListener("dragleave", () => {
+    dropZone.classList.remove("drag-over");
+});
+
+dropZone.addEventListener("drop", (event) => {
+    event.preventDefault();
+    dropZone.classList.remove("drag-over");
+    const file = event.dataTransfer.files[0];
+    if (file) processarImagem(file);
+});
+
+// Colar imagem (Ctrl+V da área de transferência)
+bColarImagem.addEventListener("click", async () => {
+    try {
+        const items = await navigator.clipboard.read();
+        for (const item of items) {
+            const tipoImagem = item.types.find(t => t.startsWith("image/"));
+            if (tipoImagem) {
+                const blob = await item.getType(tipoImagem);
+                processarImagem(blob);
+                return;
+            }
+        }
+        atualizarStatusOcr("⚠️ Nenhuma imagem encontrada na área de transferência.");
+    } catch (erro) {
+        atualizarStatusOcr("❌ Não foi possível acessar a área de transferência.");
+    }
+});
+
+
+
+
+
+
+
+
+
+
+///\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+

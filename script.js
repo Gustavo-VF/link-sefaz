@@ -160,7 +160,7 @@ function validar() {
     document.getElementById("link1").style.display = "none";
     document.getElementById("botoes1").style.display = "none";
 
-    const valor = chaveAcesso.value;
+    const valor = chaveAcesso.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
 
     if (!validarDV(valor)) {
         escreverMensage("Dígito verificador da chave inválido.");

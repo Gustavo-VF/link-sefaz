@@ -99,15 +99,14 @@ const nfceLinks = {
     "24": "http://nfce.set.rn.gov.br/consultarNFCe.aspx",
     "25": "https://www.sefaz.pb.gov.br/servirtual/documentos-fiscais/nfc-e/consultar-nfc-e",
     "26": "https://nfce.sefaz.pe.gov.br:444/nfce-web/consNfce",
-    "27": "https://dfe-portal.svrs.rs.gov.br/NFCe/Consulta", 
-       // "https://nfce.sefaz.al.gov.br/consultaNFCe.htm",
+    "27": "https://dfe-portal.svrs.rs.gov.br/NFCe/Consulta",
+    // "https://nfce.sefaz.al.gov.br/consultaNFCe.htm",
     "28": "https://nfce.sefaz.se.gov.br/portal/portalNoticias.jsp?jsp=barra-menu/servicos/consultaDANFENFCe.htm",
     "29": "http://nfe.sefaz.ba.gov.br/servicos/nfce/default.aspx",
     "31": "http://nfce.fazenda.mg.gov.br/portalnfce/sistema/consultaarg.xhtml",
     "32": "http://app.sefaz.es.gov.br/ConsultaNFCe/Default.aspx",
     "33": "https://consultadfe.fazenda.rj.gov.br/consultaDFe/paginas/consultaChaveAcesso.faces",
     "35": "https://www.nfce.fazenda.sp.gov.br/NFCeConsultaPublica/Paginas/ConsultaPublica.aspx",
-        //"https://www.nfce.fazenda.sp.gov.br/NFCeConsultaPublica/Paginas/ConsultaPublica.aspx",
     "41": "https://sped.fazenda.pr.gov.br/NFCe/webservices/sped/nfce/completa",
     "42": "https://sat.sef.sc.gov.br/tax.net/Sat.Dfe.NFCe.Web/Consultas/ConsultaPublicaNFCe.aspx",
     "43": "https://www.sefaz.rs.gov.br/NFE/NFE-NFC.aspx",
@@ -119,7 +118,6 @@ const nfceLinks = {
 
 const universalLink = "https://www.nfe.fazenda.gov.br/portal/consultaRecaptcha.aspx?tipoConsulta=resumo&tipoConteudo=7PhJ%20gAVw2g=";
 const universalLink2 = "https://meudanfe.com.br/#";
-
 
 
 const estadoOut = document.getElementById("displayestado");
@@ -138,6 +136,14 @@ const btnColar = document.getElementById("bColar");
 const divResultado = document.getElementById("resultado");
 
 const link = document.getElementById("link");
+
+
+// Remove tudo que não é letra/número e deixa maiúsculo.
+// É usada na validação E na cópia, para os dois ficarem idênticos.
+function limparChave() {
+    return chaveAcesso.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+}
+
 
 btnColar.onclick = async () => {
     try {
@@ -162,7 +168,7 @@ function validar() {
     document.getElementById("link1").style.display = "none";
     document.getElementById("botoes1").style.display = "none";
 
-    const valor = chaveAcesso.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+    const valor = limparChave();
 
     if (!validarDV(valor)) {
         escreverMensage("Dígito verificador da chave inválido.");
@@ -174,10 +180,9 @@ function validar() {
     }
 
 
-
     const estado = valor.slice(0, 2);
     const ano = valor.slice(2, 4);
-    const mes = valor.slice(4, 6)
+    const mes = valor.slice(4, 6);
     const cnpj = valor.slice(6, 20).toUpperCase();
 
     const tipo = valor.slice(20, 22);
@@ -201,10 +206,9 @@ function validar() {
     anoOut.textContent = "20" + ano;
     const anoAtual = new Date().getFullYear();
 
-
     if (ano.toString() > anoAtual.toString().slice(2, 4)) {
         anoOut.style.color = "red";
-        anoOut.textContent = "Invalido"
+        anoOut.textContent = "Invalido";
     } else {
         anoOut.style.color = "black";
     }
@@ -222,9 +226,9 @@ function validar() {
 
 
     emissaoOut.textContent = emissaoNomes[emissao] ?? "Invalido";
-    if (emissaoOut == "Invalido") {
+    // corrigido: antes comparava o elemento (emissaoOut) e não o texto
+    if (emissaoOut.textContent == "Invalido") {
         emissaoOut.style.color = "red";
-
     } else {
         emissaoOut.style.color = "black";
     }
@@ -248,11 +252,7 @@ function validar() {
     }
 
 
-
-
     divResultado.style.display = "grid";
-
-
 
 };
 
@@ -338,10 +338,9 @@ document.getElementById("abrirLink1").onclick = () => abrirEcopiar(document.getE
 document.getElementById("abrirLink2").onclick = () => abrirEcopiar(document.getElementById("link22").href);
 
 
-
 function abrirEcopiar(url) {
     if (!url || url === "#") return;
-    let chave = chaveAcesso.value;
+    let chave = limparChave();
     navigator.clipboard.writeText(chave);
     window.open(url, '_blank');
 }
@@ -354,7 +353,7 @@ function escreverMensage(msg) {
 }
 
 async function copiarChave() {
-    let chave = chaveAcesso.value;
+    let chave = limparChave();
     try {
         await navigator.clipboard.writeText(chave);
         escreverMensage("Chave copiada com sucesso!");
@@ -385,25 +384,7 @@ function validarDV(chave) {
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// ===== OCR / Leitura de imagem (novo) =====
+// ===== OCR / Leitura de imagem =====
 
 const dropZone = document.getElementById("dropZone");
 const inputImagem = document.getElementById("inputImagem");
@@ -497,7 +478,7 @@ dropZone.addEventListener("drop", (event) => {
     if (file) processarImagem(file);
 });
 
-// Colar imagem (Ctrl+V da área de transferência)
+// Colar imagem da área de transferência
 bColarImagem.addEventListener("click", async () => {
     try {
         const items = await navigator.clipboard.read();
@@ -514,16 +495,3 @@ bColarImagem.addEventListener("click", async () => {
         atualizarStatusOcr("❌ Não foi possível acessar a área de transferência.");
     }
 });
-
-
-
-
-
-
-
-
-
-
-///\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
-//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
-
